@@ -1,0 +1,130 @@
+<!DOCTYPE html>                                                                                                       
+<html lang="ja">                                                                                                      
+<head>                                                                                                                
+    <meta charset="UTF-8">                                                                                            
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">                                            
+    <title>英語勉強アプリ</title>                                                                                     
+    <link rel="stylesheet" href="style.css">                                                                          
+</head>                                                                                                               
+<body>                                                                                                                
+    <!-- ====== メニュー画面 ====== -->                                                                            
+    <div class="container" id="menuScreen">                                                                           
+        <h1>英語勉強アプリ</h1>                                                                                    
+        <p class="subtitle">勉強のしかたをえらんでね！</p>                                                            
+        <div class="menu-buttons">                                                                                    
+           <button class="menu-btn" onclick="switchMode('choice')">                                                  
+               <span class="menu-icon">📖</span>                                                                     
+               <span class="menu-title">① 単語選択</span>                                                        
+               <span class="menu-desc"></span>                                               
+           </button>                                                                                                 
+               <button class="menu-btn" onclick="switchMode('sentence')">                                               
+               <span class="menu-icon">✏️</span>                                                                     
+               <span class="menu-title">② 文章記述</span>                                                        
+               <span class="menu-desc"></span>                                               
+           </button>                                                                                                 
+           <button class="menu-btn" onclick="switchMode('spell')">                                                   
+               <span class="menu-icon">⌨️</span>                                                                     
+               <span class="menu-title">③ スペル記述</span>                                                    
+               <span class="menu-desc"></span>                                                 
+           </button>                                                                                                 
+           <button class="menu-btn" onclick="switchMode('memo')">                                                    
+               <span class="menu-icon">📝</span>                                                                     
+               <span class="menu-title">④ メモ帳</span>                                                              
+               <span class="menu-desc"></span>                                                 
+           </button>                                                                                                 
+        </div>                                                                                                        
+   </div>                                                                                                            
+   
+   <!-- ======  文を書こう！サブメニュー ====== -->                                                 
+    <div class="container" id="sentenceMenuScreen" style="display:none;">                              
+        <div class="header">                                                                           
+            <button class="back-btn" onclick="switchMode('menu')">← もどる</button>                    
+            <h1>文章記述</h1>                                                                   
+        </div>                                                                                         
+        <p class="subtitle">やりかたをえらんでね！</p>                                                 
+        <div class="menu-buttons">                                                                     
+            <button class="menu-btn" onclick="switchMode('translate')">                                
+                <span class="menu-icon">🔤</span>                                                      
+                <span class="menu-title">全文英訳</span>                                         
+            </button>                                                                                  
+            <button class="menu-btn" onclick="switchMode('arrange')">                                  
+                <span class="menu-icon">🔀</span>                                                      
+                <span class="menu-title">単語並び替え</span>                                                                       
+        </div>                                                                                         
+    </div>                                                                                             
+                                                                                                         
+    <!-- ====== 全文英訳モード ====== -->                                                           
+    <div class="container" id="translateScreen" style="display:none;">                                 
+        <div class="header">                                                                           
+            <button class="back-btn" onclick="switchMode('menu')">← 最初に戻る</button>                
+            <h1> ぜんぶ英語にしてみよう！</h1>                                            
+            </button>                                                                                
+        </div>                                                                                         
+        <p class="progress" id="translateProgress">1 / 3</p>                                           
+        <div class="card" id="translateQuestion">私はりんごを食べます</div>                            
+        <input type="text" id="translateInput" placeholder="ここに英語を書いてね">                     
+        <button class="check-btn" id="translateCheckBtn">答え合わせ</button>                           
+        <p class="result" id="translateResult"></p>
+        <div class="ring-container" id="translateRingContainer">                                       
+            <svg class="ring" width="160" height="160" viewBox="0 0 160 160">                          
+                <circle cx="80" cy="80" r="70" fill="none" stroke="#e0e0e0" stroke-width="16"/>        
+                <circle id="translateRingProgress" cx="80" cy="80" r="70" fill="none" stroke="#4caf50" 
+stroke-width="16"                                                                                      
+   stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="439.8" transform="rotate(-90, 80,  
+80)"/>                                                                                                  
+        </svg>                                                                                     
+        <div class="ring-text" id="translateRingText">0%</div>                                     
+  </div>                                                    
+        <button class="next-btn" id="translateNextBtn">次の問題 ▶</button>                             
+    </div>                                                                                             
+                                                                                                         
+    <!-- ====== 並び替えモード ====== -->                                                           
+    <div class="container" id="arrangeScreen" style="display:none;">                                   
+        <div class="header">                                                                           
+            <button class="back-btn" onclick="switchMode('menu')">← 最初に戻る</button>                
+            <h1>ならびかえよう！</h1>                                                               
+        </div>                                                                                         
+        <p class="progress" id="arrangeProgress">1 / 3</p>                                             
+        <div class="card" id="arrangeQuestion">私はりんごを食べます</div>                              
+        <div class="word-bank" id="wordBank"></div>                                                    
+        <div class="answer-area" id="answerArea"></div>                                                
+        <div class="arrange-buttons">                                                                  
+            <button class="check-btn" id="arrangeCheckBtn">答え合わせ</button>                                                  
+        </div>                                                                                         
+        <p class="result" id="arrangeResult"></p>              
+        <div class="ring-container" id="arrangeRingContainer">                                         
+              <svg class="ring" width="160" height="160" viewBox="0 0 160 160">                          
+                  <circle cx="80" cy="80" r="70" fill="none" stroke="#e0e0e0" stroke-width="16"/>        
+                  <circle id="arrangeRingProgress" cx="80" cy="80" r="70" fill="none" stroke="#4caf50" stroke-width="16"                                                                                       
+   stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="439.8" transform="rotate(-90, 80, 80)"/>                                                                                                  
+              </svg>                                                                                     
+              <div class="ring-text" id="arrangeRingText">0%</div>                                       
+          </div>                                         
+        <button class="next-btn" id="arrangeNextBtn">次の問題 ▶</button>                               
+    </div>               
+   
+   <!-- ====== ① クイズ画面（今のやつ） ====== -->                                                                   
+   <div class="container" id="choiceScreen" style="display:none;">                                                   
+       <div class="header">                                                                                          
+           <button class="back-btn" onclick="switchMode('menu')">←  戻る</button>                                   
+           <h1> 訳を選ぼう！</h1>                                                                                  
+       </div>                                                                                                        
+       <p class="progress" id="progress">1 / 7</p>                                                                   
+       <div class="card" id="question">apple</div>                                                                   
+       <div class="choices" id="choices"></div>                                                                      
+       <p class="result" id="result"></p>                                                                            
+       <div class="ring-container" id="choiceRingContainer">                                                                                  
+           <svg class="ring" width="160" height="160" viewBox="0 0 160 160">                                         
+               <circle cx="80" cy="80" r="70" fill="none" stroke="#e0e0e0" stroke-width="16"/>                       
+               <circle id="ringProgress" cx="80" cy="80" r="70" fill="none" stroke="#4caf50" stroke-width="16"       
+stroke-linecap="round" stroke-dasharray="439.8" stroke-dashoffset="439.8" transform="rotate(-90, 80, 80)"/>             
+           </svg>                                                                                                    
+              <div class="ring-text" id="ringText">0%</div>                                                             
+          </div>                                                                                                        
+          <button class="next-btn" id="nextBtn">次の問題 ▶</button>                                                     
+          <button class="review-btn" id="reviewBtn" style="display:none;">まちがえた単語を復習する</button>          
+      </div>                                                                                                            
+                                                                                                                         
+   <script src="script.js"></script>                                                                                 
+</body>                                                                                                               
+</html> 
