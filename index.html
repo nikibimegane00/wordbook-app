@@ -40,7 +40,21 @@
         <div class="header">                                                                           
             <button class="back-btn" onclick="switchMode('menu')">← もどる</button>                    
             <h1>文章記述</h1>                                                                   
-        </div>                                                                                         
+        </div>                       
+        
+    <!-- ====== ④ メモ帳 ====== -->                                                                                      
+      <div class="container" id="memoScreen" style="display:none;">                                                        
+          <div class="header">                                                                                             
+              <button class="back-btn" onclick="switchMode('menu')">← もどる</button>                                      
+              <h1>メモ帳</h1>                                                                                              
+          </div>                                                                                                           
+          <textarea id="memoText" class="memo-textarea" readonly>ここにメモを書こう！</textarea>                           
+          <div class="memo-buttons">                                                                                       
+              <button class="memo-btn" id="memoEditBtn">📝 書く</button>                                                   
+              <button class="memo-btn memo-save-btn" id="memoSaveBtn">💾 保存</button>                                     
+          </div>                                                                                                           
+      </div>    
+
         <p class="subtitle">やりかたをえらんでね！</p>                                                 
         <div class="menu-buttons">                                                                     
             <button class="menu-btn" onclick="switchMode('translate')">                                
@@ -57,7 +71,7 @@
     <div class="container" id="translateScreen" style="display:none;">                                 
         <div class="header">                                                                           
             <button class="back-btn" onclick="switchMode('menu')">← 最初に戻る</button>                
-            <h1> ぜんぶ英語にしてみよう！</h1>                                            
+            <h1> 全文和訳</h1>                                            
             </button>                                                                                
         </div>                                                                                         
         <p class="progress" id="translateProgress">1 / 3</p>                                           
@@ -75,14 +89,16 @@ stroke-width="16"
         </svg>                                                                                     
         <div class="ring-text" id="translateRingText">0%</div>                                     
   </div>                                                    
-        <button class="next-btn" id="translateNextBtn">次の問題 ▶</button>                             
+        <button class="next-btn" id="translateNextBtn">次の問題 ▶</button> 
+        <button class="next-btn" id="translateNextBtn">次の問題 ▶</button>                                              
+        <button class="review-btn" id="translateReviewBtn" style="display:none;">まちがえた単語を復習する</button>
     </div>                                                                                             
                                                                                                          
     <!-- ====== 並び替えモード ====== -->                                                           
     <div class="container" id="arrangeScreen" style="display:none;">                                   
         <div class="header">                                                                           
             <button class="back-btn" onclick="switchMode('menu')">← 最初に戻る</button>                
-            <h1>ならびかえよう！</h1>                                                               
+            <h1>単語並び替え</h1>                                                               
         </div>                                                                                         
         <p class="progress" id="arrangeProgress">1 / 3</p>                                             
         <div class="card" id="arrangeQuestion">私はりんごを食べます</div>                              
@@ -100,7 +116,8 @@ stroke-width="16"
               </svg>                                                                                     
               <div class="ring-text" id="arrangeRingText">0%</div>                                       
           </div>                                         
-        <button class="next-btn" id="arrangeNextBtn">次の問題 ▶</button>                               
+        <button class="next-btn" id="arrangeNextBtn">次の問題 ▶</button>  
+        <button class="review-btn" id="arrangeReviewBtn" style="display:none;">まちがえた単語を復習する</button>                              
     </div>               
    
    <!-- ====== ① クイズ画面（今のやつ） ====== -->                                                                   

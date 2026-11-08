@@ -2,7 +2,8 @@
 function switchMode(mode) {                                                                           
    // 全部の画面をいったん隠す                                                                        
    document.getElementById("menuScreen").style.display = "none";                                      
-   document.getElementById("choiceScreen").style.display = "none";                                    
+   document.getElementById("choiceScreen").style.display = "none"; 
+   document.getElementById("memoScreen").style.display = "none";                                   
    document.getElementById("sentenceMenuScreen").style.display = "none";                              
    document.getElementById("translateScreen").style.display = "none";                                 
    document.getElementById("arrangeScreen").style.display = "none";                                   
@@ -20,7 +21,10 @@ function switchMode(mode) {
    } else if (mode === "arrange") {                                                                   
       document.getElementById("arrangeScreen").style.display = "block";                               
       startArrange();                                                                                 
-   }                                                                                                  
+   } else if (mode === "memo") {                                                                                        
+      document.getElementById("memoScreen").style.display = "block";                                                    
+      loadMemo();                                                                                                       
+   }                                                                                
 }                                                                                                           
 
 
@@ -318,80 +322,140 @@ function startReview() {
 // 復習ボタンが押されたら                                                                                             
 reviewBtn.addEventListener("click", startReview); 
 
-// ========== 🔤 全文英訳モード ==========                                                            
-let translateIndex = 0;                                                                               
-                                                                                                         
-function startTranslate() {                                                                           
-   translateIndex = 0;                                                                                
-   showTranslateQuestion();                                                                           
-}                                                                                                     
-                                                                                                         
-function showTranslateQuestion() {                                                                    
-   const q = sentenceQuestions[translateIndex];                                                       
-   document.getElementById("translateQuestion").textContent = q.japanese;                             
-   document.getElementById("translateProgress").textContent = `${translateIndex + 1} /                
-${sentenceQuestions.length}`;                                                                           
-   document.getElementById("translateInput").value = "";                                              
-   document.getElementById("translateResult").textContent = "";                                       
-   document.getElementById("translateResult").className = "result";                                   
-   document.getElementById("translateNextBtn").style.display = "none";                                
-   document.getElementById("translateCheckBtn").style.display = "inline-block";                       
-}                                                                                                     
-                                                                                                         
-function checkTranslate() {                                                                           
-   const input = document.getElementById("translateInput").value.trim();                              
-   const correct = sentenceQuestions[translateIndex].english;                                         
-   const resultEl = document.getElementById("translateResult");                                       
-                                                                                                         
-   if (input.toLowerCase() === correct.toLowerCase()) {                                               
-       resultEl.textContent = " 正解⭕";                                                            
-       resultEl.className = "result correct";                                                         
-   } else {                                                                                           
-      resultEl.textContent = ` 不正解❌... 正解は「${correct}」`;                                    
-      resultEl.className = "result wrong";                                                           
-   }                                                                                                  
-                                                                                                         
-   document.getElementById("translateCheckBtn").style.display = "none";                               
-   document.getElementById("translateNextBtn").style.display = "inline-block";                        
-}                                                                                                     
-                                                                                                         
-function nextTranslateQuestion() {                                                                    
-   translateIndex++;                                                                                  
-   if (translateIndex >= sentenceQuestions.length) {                                                  
-      document.getElementById("translateQuestion").textContent = "";                         
-      document.getElementById("translateInput").style.display = "none";                              
-                                                                                                         
-      // リングを表示！                                                                              
-      const ringContainer = document.getElementById("translateRingContainer");                       
-      const ringProgress = document.getElementById("translateRingProgress");                         
-      const ringText = document.getElementById("translateRingText");                                 
-      const targetPercent = 100;                                                                     
-      const circumference = 2 * Math.PI * 70;                                                        
-                                                                                                         
-      document.getElementById("translateResult").textContent = `${sentenceQuestions.length}問終了`;                                                                                              
-      document.getElementById("translateResult").className = "result correct";                       
-      ringContainer.style.display = "block";                                                         
-                                                                                                      
-      let currentPercent = 0;                                                                        
-      function step() {                                                                              
-          currentPercent++;                                                                          
-          const offset = circumference * (1 - currentPercent / 100);                                 
-          ringProgress.style.strokeDashoffset = offset;                                              
-          ringText.textContent = `${currentPercent}%`;                                               
-          if (currentPercent < targetPercent) {                                                      
-              requestAnimationFrame(step);}                                                                                          
-          }    
-      }                                                                                          
-      requestAnimationFrame(step);                                                                   
-                                                                                                         
-      document.getElementById("translateNextBtn").textContent = "もう一度";                      
-      document.getElementById("translateNextBtn").removeEventListener("click", nextTranslateQuestion);                                                                                 
-      document.getElementById("translateNextBtn").addEventListener("click", resetTranslate);         
-      return;           
-   }                                                                                       
-   showTranslateQuestion();                                                                           
-                                                                                                     
-                                                                                                         
+// ========== 🔤 全文英訳モード ==========                                                                              
+let translateIndex = 0;                                                                                                 
+let translateScore = 0;          // ← 追加！                                                                            
+let translateWrongWords = [];    // ← 追加！                                                                            
+                                                                                                                           
+function startTranslate() {                                                                                             
+   translateIndex = 0;                                                                                                  
+   translateScore = 0;           // ← 追加！                                                                            
+   translateWrongWords = [];     // ← 追加！                                                                            
+   showTranslateQuestion();                                                                                             
+}                                                                                                                       
+                                                                                                                           
+function showTranslateQuestion() {                                                                                      
+   const q = sentenceQuestions[translateIndex];                                                                         
+   document.getElementById("translateQuestion").textContent = q.japanese;                                               
+   document.getElementById("translateProgress").textContent = `${translateIndex + 1} / ${sentenceQuestions.length}`;    
+   document.getElementById("translateInput").value = "";                                                                
+   document.getElementById("translateResult").textContent = "";                                                         
+   document.getElementById("translateResult").className = "result";                                                     
+   document.getElementById("translateNextBtn").style.display = "none";                                                  
+   document.getElementById("translateCheckBtn").style.display = "inline-block";                                         
+   // 結果発表モードじゃないときは入力欄を表示                                                                          
+   document.getElementById("translateInput").style.display = "inline-block";                                            
+   document.getElementById("translateQuestion").style.display = "block";                                                
+   document.getElementById("translateRingContainer").style.display = "none";                                            
+}                                                                                                                       
+                                                                                                                           
+function checkTranslate() {                                                                                             
+   const input = document.getElementById("translateInput").value.trim();                                                
+   const correct = sentenceQuestions[translateIndex].english;                                                           
+   const resultEl = document.getElementById("translateResult");                                                         
+                                                                                                                           
+   if (input.toLowerCase() === correct.toLowerCase()) {                                                                 
+       resultEl.textContent = " 正解⭕";                                                                                
+       resultEl.className = "result correct";                                                                           
+       translateScore++;                          // ← 追加！                                                           
+   } else {                                                                                                             
+      resultEl.textContent = ` 不正解❌... 正解は「${correct}」`;                                                       
+      resultEl.className = "result wrong";                                                                              
+      translateWrongWords.push(sentenceQuestions[translateIndex]);  // ← 追加！                                         
+   }                                                                                                                    
+                                                                                                                           
+   document.getElementById("translateCheckBtn").style.display = "none";                                                 
+   document.getElementById("translateNextBtn").style.display = "inline-block";                                          
+}                                                                                                                       
+                                                                                                                           
+function nextTranslateQuestion() {                                                                                      
+   translateIndex++;                                                                                                    
+   if (translateIndex >= sentenceQuestions.length) {                                                                    
+      // ★ 結果発表！                                                                                                   
+      document.getElementById("translateQuestion").textContent = "結果発表";                                            
+      document.getElementById("translateInput").style.display = "none";                                                 
+                                                                                                                           
+      const ringContainer = document.getElementById("translateRingContainer");                                          
+      const ringProgress = document.getElementById("translateRingProgress");                                            
+      const ringText = document.getElementById("translateRingText");                                                    
+      const targetPercent = Math.round((translateScore / sentenceQuestions.length) * 100);                              
+      const circumference = 2 * Math.PI * 70;                                                                           
+                                                                                                                           
+      document.getElementById("translateResult").textContent =                                                          
+          `${sentenceQuestions.length}問中 ${translateScore}問 正解！`;                                                 
+      document.getElementById("translateResult").className = "result correct";                                          
+      ringContainer.style.display = "block";                                                                            
+                                                                                                                           
+      let currentPercent = 0;                                                                                           
+      function step() {                                                                                                 
+          currentPercent++;                                                                                             
+          const offset = circumference * (1 - currentPercent / 100);                                                    
+          ringProgress.style.strokeDashoffset = offset;                                                                 
+          ringText.textContent = `${currentPercent}%`;                                                                  
+          if (currentPercent < targetPercent) {                                                                         
+              requestAnimationFrame(step);                                                                              
+          }                                                                                                             
+      }                                                                                                                 
+      requestAnimationFrame(step);                                                                                      
+                                                                                                                           
+      document.getElementById("translateNextBtn").textContent = "もう一度";                                             
+      document.getElementById("translateNextBtn").removeEventListener("click", nextTranslateQuestion);                  
+      document.getElementById("translateNextBtn").addEventListener("click", resetTranslate);                            
+                                                                                                                           
+      // ★ 復習ボタンを表示                                                                                             
+      const reviewBtn = document.getElementById("translateReviewBtn");                                                  
+            if (translateWrongWords.length > 0) {                                                                             
+          reviewBtn.textContent = `不正解の単語${translateWrongWords.length}個を復習する`;                              
+          reviewBtn.style.display = "inline-block";                                                                     
+      } else {                                                                                                          
+          reviewBtn.style.display = "none";                                                                             
+      }                                                                                                                 
+                                                                                                                           
+      return;                                                                                                           
+   }                                                                                                                    
+   showTranslateQuestion();                                                                                             
+}                                                                                                                       
+                                                                                                                           
+function resetTranslate() {                                                                                             
+   document.getElementById("translateInput").style.display = "inline-block";                                            
+   document.getElementById("translateNextBtn").textContent = "次の問題 ▶";                                              
+   document.getElementById("translateNextBtn").removeEventListener("click", resetTranslate);                            
+   document.getElementById("translateNextBtn").addEventListener("click", nextTranslateQuestion);                        
+   startTranslate();                                                                                                    
+}                                                                                                                       
+                                                                                                                           
+// ★ 復習ボタンの処理                                                                                                   
+function startTranslateReview() {                                                                                       
+   if (translateWrongWords.length === 0) return;                                                                        
+                                                                                                                           
+   // 間違えた問題だけを出す                                                                                            
+   const saved = [...sentenceQuestions];                                                                                
+   sentenceQuestions.length = 0;                                                                                        
+   for (let w of translateWrongWords) {                                                                                 
+       sentenceQuestions.push(w);                                                                                       
+   }                                                                                                                    
+                                                                                                                           
+   translateIndex = 0;                                                                                                  
+   translateScore = 0;                                                                                                  
+   translateWrongWords = [];                                                                                            
+                                                                                                                           
+   document.getElementById("translateRingContainer").style.display = "none";                                            
+   document.getElementById("translateReviewBtn").style.display = "none";                                                
+   document.getElementById("translateNextBtn").textContent = "次の問題 ▶";                                              
+   document.getElementById("translateNextBtn").removeEventListener("click", startTranslateReview);                      
+   document.getElementById("translateNextBtn").addEventListener("click", nextTranslateQuestion);                        
+   showTranslateQuestion();                                                                                             
+                                                                                                                           
+   // 復習が終わったら元に戻す                                                                                          
+   sentenceQuestions.length = 0;                                                                                        
+   for (let q of saved) {                                                                                               
+       sentenceQuestions.push(q);                                                                                       
+   }                                                                                                                    
+}                                                                                                                       
+                                                                                                                           
+document.getElementById("translateCheckBtn").addEventListener("click", checkTranslate);                                 
+document.getElementById("translateNextBtn").addEventListener("click", nextTranslateQuestion); 
+
 function resetTranslate() {                                                                           
    document.getElementById("translateInput").style.display = "inline-block";                          
    document.getElementById("translateNextBtn").textContent = "次の問題 ▶";                            
@@ -405,11 +469,15 @@ document.getElementById("translateNextBtn").addEventListener("click", nextTransl
                                                                                            
    // ========== 🔀 並び替えモード ==========                                                            
 let arrangeIndex = 0;                                                                                 
-let selectedWords = [];                                                                               
+let selectedWords = [];  
+let arrangeScore = 0;        // 正解数                                                                                  
+let arrangeWrongWords = [];
                                                                                                          
 function startArrange() {                                                                             
    arrangeIndex = 0;                                                                                  
    selectedWords = []; 
+   arrangeScore = 0;          // ← 追加！                                                                               
+   arrangeWrongWords = [];
    document.getElementById("arrangeQuestion").style.display = "";                                     
    document.getElementById("wordBank").style.display = "";                                            
    document.getElementById("answerArea").style.display = "";                                          
@@ -473,12 +541,14 @@ function checkArrange() {
    const userAnswer = selectedWords.join(" ");                                                        
    const resultEl = document.getElementById("arrangeResult");                                         
                                                                                                          
-   if (userAnswer.toLowerCase() === correct.toLowerCase()) {                                          
-       resultEl.textContent = "⭕正解";                                                            
-       resultEl.className = "result correct";                                                         
-   } else {                                                                                           
-       resultEl.textContent = `❌ 不正解... 正解は「${correct}」`;                                    
-       resultEl.className = "result wrong";                                                           
+   if (userAnswer.toLowerCase() === correct.toLowerCase()) {                                                               
+       resultEl.textContent = "⭕正解";                                                                                    
+       resultEl.className = "result correct";                                                                              
+       arrangeScore++;  // ← 追加！正解数を増やす                                                                          
+   } else {                                                                                                                
+       resultEl.textContent = `❌ 不正解... 正解は「${correct}」`;                                                         
+       resultEl.className = "result wrong";                                                                                
+       arrangeWrongWords.push(sentenceQuestions[arrangeIndex]);  // ← 追加！間違えた問題を保存                             
    }                                                                                                  
                                                                                                          
    document.getElementById("arrangeCheckBtn").style.display = "none";                                 
@@ -489,41 +559,58 @@ function checkArrange() {
                                                                                                          
 function nextArrangeQuestion() {                                                                      
    arrangeIndex++;                                                                                    
-   if (arrangeIndex >= sentenceQuestions.length) {                                                    
-      document.getElementById("arrangeQuestion").style.display = "none";           
-      document.getElementById("wordBank").style.display = "none";                
-      document.getElementById("answerArea").style.display = "none";        
-      document.getElementById("arrangeCheckBtn").style.display = "none";       
-      document.getElementById("arrangeResult").textContent = "";             
-      document.querySelector("#arrangeScreen .back-btn").style.display = "none";                                       
-                                                                                                         
-       const ringContainer = document.getElementById("arrangeRingContainer");                         
-       const ringProgress = document.getElementById("arrangeRingProgress");                           
-       const ringText = document.getElementById("arrangeRingText");                                             
-       const targetPercent = 100;                                                                     
-       const circumference = 2 * Math.PI * 70;                                                        
-                                                                                                         
-       document.getElementById("arrangeResult").textContent = "";                   
-       document.getElementById("arrangeResult").className = "result correct";                         
-       ringContainer.style.display = "block";                                                         
-                                                                                                         
-       let currentPercent = 0;                                                                        
-       function step() {                                                                              
-           currentPercent++;                                                                          
-           const offset = circumference * (1 - currentPercent / 100);                                 
-           ringProgress.style.strokeDashoffset = offset;                                              
-           ringText.textContent = `${currentPercent}%`;                                               
-           if (currentPercent < targetPercent) {                                                      
-               requestAnimationFrame(step);                                                           
-           }                                                                                          
-       }                                                                                              
-       requestAnimationFrame(step);                                                                   
-                                                                                                         
-       document.getElementById("arrangeNextBtn").textContent = "もう一度";                        
-       document.getElementById("arrangeNextBtn").removeEventListener("click", nextArrangeQuestion);   
-       document.getElementById("arrangeNextBtn").addEventListener("click", resetArrangeFull);         
-       return;                                                                                        
-   }                                                                                     
+   if (arrangeIndex >= sentenceQuestions.length) {                                                                         
+       // ★「もどる」ボタンを消さない！（この行を消すかコメントアウト）                                                    
+       // document.querySelector("#arrangeScreen .back-btn").style.display = "none";                                       
+                                                                                                                           
+       // ★「結果発表」と正解数を表示                                                                                      
+       document.getElementById("arrangeQuestion").textContent = "結果発表";                                                
+       document.getElementById("arrangeQuestion").style.display = "block";                                                 
+       document.getElementById("wordBank").style.display = "none";                                                         
+       document.getElementById("answerArea").style.display = "none";                                                       
+       document.getElementById("arrangeCheckBtn").style.display = "none";                                                  
+                                                                                                                           
+       // ★ 正解数を表示！                                                                                                 
+       document.getElementById("arrangeResult").textContent =                                                              
+           `${sentenceQuestions.length}問中 ${arrangeScore}問 正解！`;                                                     
+       document.getElementById("arrangeResult").className = "result correct";                                              
+                                                                                                                           
+       // ★ リングの正解率を計算                                                                                           
+       const ringContainer = document.getElementById("arrangeRingContainer");                                              
+       const ringProgress = document.getElementById("arrangeRingProgress");                                                
+       const ringText = document.getElementById("arrangeRingText");                                                        
+       const targetPercent = Math.round((arrangeScore / sentenceQuestions.length) * 100);                                  
+       const circumference = 2 * Math.PI * 70;                                                                             
+                                                                                                                           
+       ringContainer.style.display = "block";                                                                              
+                                                                                                                           
+       let currentPercent = 0;                                                                                             
+       function step() {                                                                                                   
+           currentPercent++;                                                                                               
+           const offset = circumference * (1 - currentPercent / 100);                                                      
+           ringProgress.style.strokeDashoffset = offset;                                                                   
+           ringText.textContent = `${currentPercent}%`;                                                                    
+           if (currentPercent < targetPercent) {                                                                           
+               requestAnimationFrame(step);                                                                                
+           }                                                                                                               
+       }                                                                                                                   
+       requestAnimationFrame(step);                                                                                        
+                                                                                                                           
+       document.getElementById("arrangeNextBtn").textContent = "もう一度";                                                 
+       document.getElementById("arrangeNextBtn").removeEventListener("click", nextArrangeQuestion);                        
+       document.getElementById("arrangeNextBtn").addEventListener("click", resetArrangeFull);                              
+                                                                                                                           
+       // ★ 間違えた問題があったら復習ボタンを表示                                                                         
+       const arrangeReviewBtn = document.getElementById("arrangeReviewBtn");                                               
+       if (arrangeWrongWords.length > 0) {                                                                                 
+           arrangeReviewBtn.textContent = `不正解の単語${arrangeWrongWords.length}個を復習する`;                           
+           arrangeReviewBtn.style.display = "inline-block";                                                                
+       } else {                                                                                                            
+           arrangeReviewBtn.style.display = "none";                                                                        
+       }                                                                                                                   
+                                                                                                                           
+       return;                                                                                                             
+   }                                                                                
    showArrangeQuestion();                                                                            
 }                                                                                                     
                                                                                                          
@@ -532,7 +619,66 @@ function resetArrangeFull() {
    document.getElementById("arrangeNextBtn").removeEventListener("click", resetArrangeFull);          
    document.getElementById("arrangeNextBtn").addEventListener("click", nextArrangeQuestion);          
    startArrange();                                                                                    
-}                                                                                                     
+}                 
+                                                                                               
+   // ↑のかわりに↓のほうが安全！                   
+function startArrangeReview() {                 
+       if (arrangeWrongWords.length === 0) return; 
+                                                   
+       // 今の問題リストを覚えておく               
+       const savedQuestions =                      
+ [...sentenceQuestions];                           
+       // 間違えた問題だけを出す                   
+       sentenceQuestions.length = 0;               
+       for (let w of arrangeWrongWords) {          
+           sentenceQuestions.push(w);              
+       }                                           
+                                                   
+       arrangeIndex = 0;                           
+       arrangeScore = 0;                           
+       arrangeWrongWords = [];                     
+                                                   
+                                                   
+ document.getElementById("arrangeRingContainer").s 
+ tyle.display = "none";                            
+                                                   
+ document.getElementById("arrangeReviewBtn").style 
+ .display = "none";                                
+                                                   
+ document.getElementById("arrangeNextBtn").textCon 
+ tent = "次の問題 ▶";                              
+                                                   
+ document.getElementById("arrangeNextBtn").removeE 
+ ventListener("click", startArrangeReview);        
+                                                   
+ document.getElementById("arrangeNextBtn").addEven 
+ tListener("click", nextArrangeQuestion);          
+                                                   
+       // 復習が終わったら元に戻すために、             
+   }
                                                                                                          
 document.getElementById("arrangeCheckBtn").addEventListener("click", checkArrange);                                  
 document.getElementById("arrangeNextBtn").addEventListener("click", nextArrangeQuestion);
+document.getElementById("arrangeReviewBtn").addEventListener("click", startArrangeReview);
+
+// ========== 📝 メモ帳モード ==========                                                                                
+function loadMemo() {                                                                                                   
+   const saved = localStorage.getItem("memoContent");                                                                   
+   if (saved) {                                                                                                         
+       document.getElementById("memoText").value = saved;                                                               
+   } else {                                                                                                             
+       document.getElementById("memoText").value = "ここにメモを書こう！";                                              
+   }                                                                                                                    
+   document.getElementById("memoText").readOnly = true;                                                                 
+}                                                                                                                       
+                                                                                                                           
+document.getElementById("memoEditBtn").addEventListener("click", function() {                                           
+   document.getElementById("memoText").readOnly = false;                                                                
+   document.getElementById("memoText").focus();                                                                         
+});                                                                                                                     
+                                                                                                                           
+document.getElementById("memoSaveBtn").addEventListener("click", function() {                                           
+   const content = document.getElementById("memoText").value;                                                           
+   localStorage.setItem("memoContent", content);                                                                        
+   document.getElementById("memoText").readOnly = true;                                                                 
+});

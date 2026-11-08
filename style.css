@@ -327,3 +327,50 @@ h1 {
     justify-content: center;                                                                           
     margin-bottom: 16px;                                                                               
 }
+
+/* ====== 📝 メモ帳 ====== */                                                                                           
+.memo-textarea {                                                                                                        
+  width: 90%;                                                                                                          
+  height: 300px;                                                                                                       
+  padding: 15px;                                                                                                       
+  font-size: 16px;                                                                                                     
+  border: 3px solid #90caf9;                                                                                           
+  border-radius: 12px;                                                                                                 
+  resize: vertical;                                                                                                    
+  margin-bottom: 16px;                                                                                                 
+  font-family: 'Arial', sans-serif;                                                                                    
+}                                                                                                                       
+                                                                                                                           
+.memo-textarea:focus {                                                                                                  
+  outline: none;                                                                                                       
+  border-color: #4caf50;                                                                                               
+}                                                                                                                       
+                                                                                                                           
+.memo-buttons {                                                                                                         
+  display: flex;                                                                                                       
+  gap: 10px;                                                                                                           
+  justify-content: center;                                                                                             
+}                                                                                                                       
+                                                                                                                           
+.memo-btn {                                                                                                             
+  background: #4caf50;                                                                                                 
+  color: white;                                                                                                        
+  border: none;                                                                                                        
+  border-radius: 12px;                                                                                                 
+  padding: 12px 24px;                                                                                                  
+  font-size: 16px;                                                                                                     
+  cursor: pointer;                                                                                                     
+  transition: 0.2s;                                                                                                    
+}                                                                                                                       
+                                                                                                                           
+.memo-btn:hover {                                                                                                       
+  transform: scale(1.05);                                                                                              
+}                                                                                                                       
+                                                                                                                           
+.memo-save-btn {                                                                                                        
+  background: #ff9800;                                                                                                 
+}                                                                                                                       
+                                                                                                                           
+.memo-save-btn:hover {                                                                                                  
+  background: #f57c00;                                                                                                 
+} 
